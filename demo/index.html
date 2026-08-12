@@ -1,0 +1,320 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <meta
+      name="description"
+      content="A hands-on browser demo of go-git, OpenDAL OPFS objects, and transactional IndexedDB refs."
+    />
+    <title>Git Anywhere · Storage Lab</title>
+    <link rel="stylesheet" href="./styles.css" />
+  </head>
+  <body>
+    <a class="skip-link" href="#demo">Skip to repository console</a>
+    <div class="shell">
+      <header class="masthead">
+        <a
+          class="wordmark"
+          href="./"
+          aria-label="Git Anywhere Storage Lab home"
+        >
+          <span class="wordmark-mark" aria-hidden="true">GA</span>
+          <span>Git Anywhere <small>Storage Lab</small></span>
+        </a>
+        <div
+          class="runtime-status"
+          id="runtime-status"
+          data-state="booting"
+          role="status"
+        >
+          <span class="status-light" aria-hidden="true"></span>
+          <span id="runtime-status-copy">Starting two WASM runtimes…</span>
+        </div>
+      </header>
+
+      <main id="demo">
+        <section class="hero" aria-labelledby="page-title">
+          <p class="eyebrow">Bare Git, made observable</p>
+          <h1 id="page-title">
+            Publish a commit.<br />Watch the storage split.
+          </h1>
+          <p class="hero-copy">
+            Objects land in OpenDAL + OPFS first. A separate IndexedDB
+            transaction publishes refs and HEAD only after every object is
+            verified.
+          </p>
+
+          <div class="storage-map" aria-label="Storage publication sequence">
+            <article class="plane plane-objects">
+              <span class="plane-index">01</span>
+              <div>
+                <p>Object plane</p>
+                <strong>OpenDAL → OPFS</strong>
+                <small id="object-plane-copy">No repository opened</small>
+              </div>
+            </article>
+            <div class="publication-gate" aria-hidden="true">
+              <b>verify</b>
+              <i>then publish</i>
+            </div>
+            <article class="plane plane-control">
+              <span class="plane-index">02</span>
+              <div>
+                <p>Control plane</p>
+                <strong>IndexedDB transaction</strong>
+                <small id="control-plane-copy">Revision —</small>
+              </div>
+            </article>
+          </div>
+        </section>
+
+        <section
+          class="console"
+          id="repository-console"
+          aria-labelledby="console-title"
+        >
+          <div class="console-heading">
+            <div>
+              <p class="eyebrow">Hands-on proof</p>
+              <h2 id="console-title">Repository console</h2>
+            </div>
+            <p id="action-status" class="action-status" aria-live="polite">
+              Waiting for the runtime.
+            </p>
+          </div>
+
+          <form class="repo-bar" id="repo-form">
+            <label for="repo-id">Repository ID</label>
+            <input
+              id="repo-id"
+              name="repoId"
+              value="demo-repo"
+              maxlength="128"
+              pattern="[A-Za-z0-9][A-Za-z0-9._\-]{0,127}"
+              autocapitalize="none"
+              autocomplete="off"
+              spellcheck="false"
+              required
+            />
+            <button
+              class="button button-secondary"
+              id="open-button"
+              type="submit"
+              disabled
+            >
+              Open existing
+            </button>
+            <button
+              class="button button-primary"
+              id="init-button"
+              type="button"
+              disabled
+            >
+              Initialize new
+            </button>
+          </form>
+
+          <div class="action-strip" aria-label="Repository proof actions">
+            <button
+              class="action-card"
+              id="commit-button"
+              type="button"
+              disabled
+            >
+              <span class="action-number">A</span>
+              <span>
+                <strong>Create proof commit</strong>
+                <small>blob → tree → commit → main</small>
+              </span>
+            </button>
+            <button class="action-card" id="race-button" type="button" disabled>
+              <span class="action-number">B</span>
+              <span>
+                <strong>Race two writers</strong>
+                <small>same fence, exactly one winner</small>
+              </span>
+            </button>
+            <button
+              class="action-card"
+              id="reload-button"
+              type="button"
+              disabled
+            >
+              <span class="action-number">C</span>
+              <span>
+                <strong>Reload &amp; reopen</strong>
+                <small>new page + Worker, same origin data</small>
+              </span>
+            </button>
+          </div>
+
+          <div
+            class="notice"
+            id="notice"
+            data-kind="neutral"
+            role="alert"
+            hidden
+          ></div>
+        </section>
+
+        <section class="dashboard" aria-label="Repository evidence">
+          <article class="panel state-panel">
+            <div class="panel-heading">
+              <div>
+                <p class="eyebrow">Current authority</p>
+                <h2>Repository state</h2>
+              </div>
+              <span class="state-chip" id="state-chip">Not opened</span>
+            </div>
+
+            <dl class="metrics">
+              <div>
+                <dt>Revision</dt>
+                <dd id="revision-value">—</dd>
+              </div>
+              <div>
+                <dt>Reachable objects</dt>
+                <dd id="object-count-value">—</dd>
+              </div>
+              <div>
+                <dt>Generation</dt>
+                <dd id="generation-value">—</dd>
+              </div>
+              <div>
+                <dt>HEAD</dt>
+                <dd id="head-value">—</dd>
+              </div>
+            </dl>
+
+            <div class="state-section">
+              <h3>Published refs</h3>
+              <div class="empty-state" id="refs-empty">
+                Initialize a repository to begin.
+              </div>
+              <dl class="ref-list" id="ref-list"></dl>
+            </div>
+
+            <div class="state-section">
+              <h3>Reachable object graph</h3>
+              <div class="empty-state" id="objects-empty">
+                No objects are reachable yet.
+              </div>
+              <ol class="object-list" id="object-list"></ol>
+            </div>
+
+            <details class="raw-state">
+              <summary>Inspect raw state</summary>
+              <pre id="raw-state">null</pre>
+            </details>
+          </article>
+
+          <aside class="panel proof-panel">
+            <div class="panel-heading">
+              <div>
+                <p class="eyebrow">Linearization proof</p>
+                <h2>Writer race</h2>
+              </div>
+              <span class="proof-verdict" id="proof-verdict" data-state="idle"
+                >Not run</span
+              >
+            </div>
+            <p class="panel-copy">
+              Both writers receive the same generation, revision, and old branch
+              OID. IndexedDB must commit one complete update and reject the
+              stale peer.
+            </p>
+
+            <div class="writer-lanes" id="writer-lanes">
+              <div class="writer-lane" data-outcome="idle">
+                <span>Writer A</span><strong>—</strong><small>waiting</small>
+              </div>
+              <div class="writer-lane" data-outcome="idle">
+                <span>Writer B</span><strong>—</strong><small>waiting</small>
+              </div>
+            </div>
+
+            <div class="event-log-heading">
+              <h3>Operation log</h3>
+              <span>newest first</span>
+            </div>
+            <ol class="event-log" id="event-log" aria-live="polite">
+              <li><time>—</time><span>Runtime is starting.</span></li>
+            </ol>
+
+            <button
+              class="reset-button"
+              id="reset-button"
+              type="button"
+              disabled
+            >
+              Reset demo metadata
+            </button>
+            <p class="reset-note">
+              Demo-only: immutable OPFS object bytes remain.
+            </p>
+          </aside>
+        </section>
+
+        <section class="boundary" aria-labelledby="boundary-title">
+          <p class="eyebrow">Prototype boundary</p>
+          <h2 id="boundary-title">What this proves—and what it does not.</h2>
+          <div class="boundary-grid">
+            <p>
+              <strong>Proves</strong> bare Git objects, transactional refs,
+              stale-writer rejection, idempotent publication, and browser
+              persistence.
+            </p>
+            <p>
+              <strong>Defers</strong> clone/fetch/push, packs, GC, reflogs,
+              index, checkout, worktrees, and shared server authority.
+            </p>
+          </div>
+        </section>
+      </main>
+
+      <footer>
+        <span>go-git v5.19.2 · OpenDAL v0.58.1 · SHA-1 P0</span>
+        <a href="https://github.com/Eric-Song-Nop/git-anywhere-core-prototype"
+          >Source on GitHub</a
+        >
+      </footer>
+    </div>
+    <dialog
+      class="reset-dialog"
+      id="reset-dialog"
+      aria-labelledby="reset-dialog-title"
+    >
+      <form method="dialog">
+        <p class="eyebrow">Demo-only operation</p>
+        <h2 id="reset-dialog-title">Reset repository metadata?</h2>
+        <p>
+          This removes refs, HEAD, configuration, and retry receipts for
+          <strong id="reset-repo-name">this repository</strong>. Immutable
+          object bytes remain in OPFS.
+        </p>
+        <div class="dialog-actions">
+          <button
+            class="button button-secondary"
+            id="reset-cancel"
+            value="cancel"
+          >
+            Cancel
+          </button>
+          <button
+            class="button button-danger"
+            id="reset-confirm"
+            value="confirm"
+          >
+            Reset metadata
+          </button>
+        </div>
+      </form>
+    </dialog>
+    <noscript
+      >This demo requires JavaScript, WebAssembly, OPFS, and
+      IndexedDB.</noscript
+    >
+    <script type="module" src="./app.js"></script>
+  </body>
+</html>

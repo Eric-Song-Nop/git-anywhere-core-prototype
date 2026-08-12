@@ -42,6 +42,27 @@ Or run the final cross-module proof after building both WASM modules:
 node integration/run-integration.mjs
 ```
 
+## Try the storage lab
+
+The repository also includes a deliberately small, no-framework browser UI
+for inspecting the same core contract:
+
+```sh
+./rust-opendal/scripts/build.sh
+./go-git/scripts/build.sh
+node demo/serve.mjs
+```
+
+Open <http://127.0.0.1:4173/demo/>. The lab can initialize or reopen a bare
+repository, publish the deterministic proof commit, race two same-fence
+writers, and reload into a new page and Worker to verify exact persisted
+revision, refs, HEAD, and reachable object bytes. Its two storage lanes make
+the split explicit: immutable Git objects flow through OpenDAL into OPFS,
+while IndexedDB owns atomic refs, HEAD, and revision publication. The reset
+control removes demo metadata only; immutable OPFS bytes intentionally remain.
+
+See [demo/README.md](demo/README.md) for the interaction and test details.
+
 The final harness launches two sequential, fully separate Chromium processes
 with one profile and origin. It proves:
 
