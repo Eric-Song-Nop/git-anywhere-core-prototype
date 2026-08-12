@@ -1,7 +1,9 @@
 # Git Anywhere core-storage prototype
 
-This is a deliberately small proof that a real Git core can run in a browser
-without treating remote object storage as a POSIX filesystem.
+This is a deliberately small storage-architecture research prototype. It
+proves that a real Git core can run in a browser while immutable objects live
+in OPFS and transactionally published refs and repository metadata live in
+IndexedDB.
 
 ```text
 go-git v5.19.2 (Go-WASM, bare repository)
@@ -53,7 +55,7 @@ for inspecting the same core contract:
 node demo/serve.mjs
 ```
 
-Open <http://127.0.0.1:4173/demo/>. The lab can initialize or reopen a bare
+Open `http://127.0.0.1:4173/demo/`. The lab can initialize or reopen a bare
 repository, publish the deterministic proof commit, race two same-fence
 writers, and reload into a new page and Worker to verify exact persisted
 revision, refs, HEAD, and reachable object bytes. Its two storage lanes make
@@ -78,6 +80,22 @@ with one profile and origin. It proves:
 
 See [ARCHITECTURE.md](ARCHITECTURE.md) for the publication rule and explicit
 P0 boundary, and each component README for its API and standalone tests.
+
+## Strategy exploration
+
+This implementation is a storage-architecture research prototype, not a claim
+that the world needs another browser Git client. Current `wasm-git` already
+provides a compact libgit2-based browser runtime with persistent OPFS variants
+and broad Git behavior.
+
+The [strategy packet](docs/strategy/README.md) evaluates where the verified
+immutable-object/transactional-ref contract might still create user-visible
+value. It covers transactional storage beneath `wasm-git`; a transactional Git
+authority with zero-clone and global-read features plus customer-owned-storage
+and Durable Object deployment profiles; verified cross-provider backup; pinned
+multi-repository release manifests; and a storage conformance lab. Every option
+has a time-boxed validation plan and an explicit stop condition; none is a
+committed roadmap.
 
 ## Non-goals
 
