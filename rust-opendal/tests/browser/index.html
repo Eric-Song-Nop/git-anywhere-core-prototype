@@ -1,0 +1,20 @@
+<!doctype html>
+<meta charset="utf-8" />
+<title>Git Anywhere OpenDAL Worker probe</title>
+<script type="module">
+  const result = document.createElement("pre");
+  result.id = "result";
+  result.textContent = "running";
+  document.body.append(result);
+
+  const mode = new URL(location.href).searchParams.get("mode") ?? "write";
+  const worker = new Worker(`./worker.js?mode=${encodeURIComponent(mode)}`, {
+    type: "module",
+  });
+  worker.onmessage = ({ data }) => {
+    result.textContent = JSON.stringify(data);
+  };
+  worker.onerror = (event) => {
+    result.textContent = JSON.stringify({ ok: false, message: event.message });
+  };
+</script>

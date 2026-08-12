@@ -1,0 +1,30 @@
+diff --git a/Cargo.toml b/Cargo.toml
+--- a/Cargo.toml
++++ b/Cargo.toml
+@@ -77,0 +78,2 @@
++    "WorkerGlobalScope",
++    "WorkerNavigator",
+diff --git a/src/core.rs b/src/core.rs
+--- a/src/core.rs
++++ b/src/core.rs
+@@ -101,0 +102,2 @@
++    use opendal_core::Error;
++    use opendal_core::ErrorKind;
+@@ -108,0 +111 @@
++    use web_sys::WorkerGlobalScope;
+@@ -115,2 +118,13 @@
+-        let navigator = window().unwrap().navigator();
+-        let storage_manager = navigator.storage();
++        let storage_manager = if let Some(window) = window() {
++            window.navigator().storage()
++        } else {
++            let worker = js_sys::global()
++                .dyn_into::<WorkerGlobalScope>()
++                .map_err(|_| {
++                    Error::new(
++                        ErrorKind::Unsupported,
++                        "OPFS requires a Window or WorkerGlobalScope",
++                    )
++                })?;
++            worker.navigator().storage()
++        };

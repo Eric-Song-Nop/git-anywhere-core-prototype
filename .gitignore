@@ -1,0 +1,6 @@
+/dist/
+/artifacts/
+/test-results/
+/rust-opendal/target/
+*.log
+.DS_Store
