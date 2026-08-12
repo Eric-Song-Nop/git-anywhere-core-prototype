@@ -532,11 +532,127 @@ h1 {
   text-transform: uppercase;
 }
 
+.state-section-copy {
+  max-width: 640px;
+  margin: -4px 0 14px;
+  color: var(--ink-soft);
+  font-size: 0.76rem;
+  line-height: 1.55;
+}
+
 .empty-state {
   border: 1px dashed var(--line-strong);
   color: var(--ink-soft);
   padding: 18px;
   font-size: 0.82rem;
+}
+
+.empty-state[data-kind="error"] {
+  border-color: var(--danger);
+  background: var(--danger-soft);
+  color: var(--danger);
+}
+
+.repository-tree {
+  border: 1px solid var(--line);
+  background: #f7f9f8;
+}
+
+.tree-lineage {
+  display: grid;
+  grid-template-columns: auto minmax(0, 1fr) auto auto minmax(0, 1fr);
+  align-items: center;
+  gap: 10px;
+  border-bottom: 1px solid var(--line);
+  padding: 12px 14px;
+}
+
+.tree-lineage span,
+.tree-file-target span,
+.tree-file-identity span {
+  font-family: "SFMono-Regular", Consolas, monospace;
+  font-size: 0.58rem;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+
+.tree-lineage span {
+  color: var(--ink-soft);
+}
+
+.tree-lineage code,
+.tree-file-target code {
+  min-width: 0;
+  font-size: 0.62rem;
+  overflow-wrap: anywhere;
+}
+
+.tree-lineage i {
+  color: var(--line-strong);
+  font-style: normal;
+}
+
+.tree-files {
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.tree-files li {
+  display: grid;
+  grid-template-columns: minmax(180px, 0.8fr) minmax(0, 1fr);
+  gap: 10px 22px;
+  border-bottom: 1px solid var(--line);
+  padding: 15px 14px;
+}
+
+.tree-files li:last-child {
+  border-bottom: 0;
+}
+
+.tree-file-identity,
+.tree-file-target {
+  display: grid;
+  grid-template-columns: auto minmax(0, 1fr) auto;
+  align-items: center;
+  gap: 9px;
+  min-width: 0;
+}
+
+.tree-file-identity span {
+  border: 1px solid var(--object);
+  color: var(--object);
+  padding: 3px 5px;
+}
+
+.tree-file-identity strong {
+  font-size: 0.78rem;
+  overflow-wrap: anywhere;
+}
+
+.tree-file-identity small,
+.tree-file-target span {
+  color: var(--ink-soft);
+}
+
+.tree-file-preview {
+  grid-column: 1 / -1;
+  margin: 0;
+  border-left: 3px solid var(--object);
+  background: var(--object-soft);
+  padding: 9px 11px;
+  font-family: "SFMono-Regular", Consolas, monospace;
+  font-size: 0.64rem;
+  line-height: 1.55;
+  overflow-wrap: anywhere;
+  white-space: pre-wrap;
+  word-break: break-word;
+}
+
+.tree-file-preview[data-kind="binary"] {
+  color: var(--ink-soft);
+  font-style: italic;
 }
 
 .ref-list,
@@ -914,9 +1030,16 @@ footer a {
   }
 
   .ref-list div,
-  .object-list li {
+  .object-list li,
+  .tree-lineage,
+  .tree-files li {
     grid-template-columns: 1fr;
     gap: 8px;
+  }
+
+  .tree-lineage i {
+    rotate: 90deg;
+    justify-self: start;
   }
 
   .writer-lanes {

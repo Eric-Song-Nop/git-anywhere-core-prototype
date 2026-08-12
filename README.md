@@ -60,6 +60,8 @@ revision, refs, HEAD, and reachable object bytes. Its two storage lanes make
 the split explicit: immutable Git objects flow through OpenDAL into OPFS,
 while IndexedDB owns atomic refs, HEAD, and revision publication. The reset
 control removes demo metadata only; immutable OPFS bytes intentionally remain.
+The repository panel also decodes the commit and root tree into the logical
+`proof.txt → blob` relationship, while explicitly remaining bare-only.
 
 See [demo/README.md](demo/README.md) for the interaction and test details.
 

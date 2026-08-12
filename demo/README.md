@@ -17,6 +17,8 @@ Open <http://127.0.0.1:4173/demo/>. The page can:
 
 - initialize or reopen a named bare repository;
 - publish the deterministic `proof.txt` blob/tree/commit through `main`;
+- decode the published commit and tree into a logical
+  `proof.txt → blob OID` file view without pretending a worktree exists;
 - race two writers against one explicit generation/revision/ref fence and
   display the one-winner/one-conflict result;
 - reload the page and Worker, then reopen the same OPFS + IndexedDB state;

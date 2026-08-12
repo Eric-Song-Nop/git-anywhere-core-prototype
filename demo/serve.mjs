@@ -14,6 +14,7 @@ const mimeTypes = new Map([
 ]);
 const publicPaths = new Set([
   "demo/app.js",
+  "demo/git-object-view.js",
   "demo/index.html",
   "demo/styles.css",
   "demo/worker.js",

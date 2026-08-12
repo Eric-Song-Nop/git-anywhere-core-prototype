@@ -340,6 +340,23 @@ async function repositoryState(driver) {
   return JSON.parse(raw);
 }
 
+async function decodedTreeState(driver) {
+  return driver.evaluate(`(() => ({
+    lineage: [...document.querySelectorAll("#repository-tree .tree-lineage code")]
+      .map((node) => node.textContent),
+    entries: [...document.querySelectorAll("#repository-tree .tree-files > li")]
+      .map((item) => ({
+        type: item.dataset.type,
+        kind: item.querySelector(".tree-file-identity span")?.textContent,
+        path: item.querySelector(".tree-file-identity strong")?.textContent,
+        mode: item.querySelector(".tree-file-identity small")?.textContent,
+        oid: item.querySelector(".tree-file-target code")?.textContent,
+        preview: item.querySelector(".tree-file-preview")?.textContent ?? null
+      })),
+    emptyHidden: document.querySelector("#tree-empty")?.hidden
+  }))()`);
+}
+
 function comparableState(repository) {
   return {
     generation: repository.generation,
@@ -516,6 +533,21 @@ try {
     Object.fromEntries(committed.objects.map(({ type, oid }) => [type, oid])),
     EXPECTED_OIDS,
   );
+  const committedTree = await decodedTreeState(driver);
+  assert.deepEqual(committedTree, {
+    lineage: [EXPECTED_OIDS.commit, EXPECTED_OIDS.tree],
+    entries: [
+      {
+        type: "blob",
+        kind: "file",
+        path: "proof.txt",
+        mode: "100644",
+        oid: EXPECTED_OIDS.blob,
+        preview: "git-anywhere core proof\n",
+      },
+    ],
+    emptyHidden: true,
+  });
 
   await clickAndWaitIdle(driver, "#race-button", "same-fence writer race");
   const raced = await repositoryState(driver);
@@ -556,6 +588,7 @@ try {
   );
   const reopened = await repositoryState(driver);
   assert.deepEqual(comparableState(reopened), beforeReload);
+  assert.deepEqual(await decodedTreeState(driver), committedTree);
 
   await setViewport(cdp, 1280, 900);
   const desktopViewport = await assertNoOverflow(driver, 1280, 900);
@@ -618,6 +651,11 @@ try {
     await driver.evaluate(`document.querySelector("#raw-state")?.textContent`),
     "null",
   );
+  assert.deepEqual(await decodedTreeState(driver), {
+    lineage: [],
+    entries: [],
+    emptyHidden: false,
+  });
   assert.ok(
     (
       await driver.evaluate(`document.querySelector("#notice")?.textContent`)
@@ -657,6 +695,7 @@ try {
         metadataReset: true,
       },
       oids: EXPECTED_OIDS,
+      decodedTree: committedTree,
       race: raceUi,
       accessibility: {
         semanticMain: semantics.main,

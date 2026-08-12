@@ -203,6 +203,18 @@
               <ol class="object-list" id="object-list"></ol>
             </div>
 
+            <div class="state-section">
+              <h3>Decoded repository tree</h3>
+              <p class="state-section-copy">
+                A logical view reconstructed from commit, tree, and blob
+                objects. This bare repository does not create a worktree.
+              </p>
+              <div class="empty-state" id="tree-empty">
+                Publish a commit to decode its files.
+              </div>
+              <div class="repository-tree" id="repository-tree"></div>
+            </div>
+
             <details class="raw-state">
               <summary>Inspect raw state</summary>
               <pre id="raw-state">null</pre>

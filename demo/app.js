@@ -1,3 +1,5 @@
+import { blobPreview, decodeRepositoryTree } from "./git-object-view.js";
+
 const elements = {
   runtimeStatus: document.querySelector("#runtime-status"),
   runtimeStatusCopy: document.querySelector("#runtime-status-copy"),
@@ -21,6 +23,8 @@ const elements = {
   refList: document.querySelector("#ref-list"),
   objectsEmpty: document.querySelector("#objects-empty"),
   objectList: document.querySelector("#object-list"),
+  treeEmpty: document.querySelector("#tree-empty"),
+  repositoryTree: document.querySelector("#repository-tree"),
   rawState: document.querySelector("#raw-state"),
   objectPlaneCopy: document.querySelector("#object-plane-copy"),
   controlPlaneCopy: document.querySelector("#control-plane-copy"),
@@ -88,6 +92,68 @@ function formatError(error) {
   return `${code}${error?.message ?? String(error)}`;
 }
 
+function renderRepositoryTree(repository) {
+  elements.repositoryTree.replaceChildren();
+  let decoded;
+  try {
+    decoded = decodeRepositoryTree(repository);
+  } catch (error) {
+    elements.treeEmpty.hidden = false;
+    elements.treeEmpty.dataset.kind = "error";
+    elements.treeEmpty.textContent = `Unable to decode repository tree: ${error.message}`;
+    return;
+  }
+  elements.treeEmpty.removeAttribute("data-kind");
+  elements.treeEmpty.hidden = decoded !== null && decoded.entries.length > 0;
+  elements.treeEmpty.textContent =
+    decoded === null
+      ? "Publish a commit to decode its files."
+      : "The root tree contains no entries.";
+  if (decoded === null) return;
+
+  const lineage = document.createElement("div");
+  lineage.className = "tree-lineage";
+  lineage.innerHTML = `<span>commit</span><code></code><i aria-hidden="true">→</i><span>root tree</span><code></code>`;
+  const lineageCodes = lineage.querySelectorAll("code");
+  lineageCodes[0].textContent = decoded.commitOid;
+  lineageCodes[1].textContent = decoded.rootTreeOid;
+  elements.repositoryTree.append(lineage);
+
+  const list = document.createElement("ul");
+  list.className = "tree-files";
+  for (const entry of decoded.entries) {
+    const item = document.createElement("li");
+    item.dataset.type = entry.type;
+    const identity = document.createElement("div");
+    identity.className = "tree-file-identity";
+    const badge = document.createElement("span");
+    badge.textContent = entry.kind;
+    const path = document.createElement("strong");
+    path.textContent = entry.path;
+    const mode = document.createElement("small");
+    mode.textContent = entry.mode;
+    identity.append(badge, path, mode);
+    const target = document.createElement("div");
+    target.className = "tree-file-target";
+    const type = document.createElement("span");
+    type.textContent = entry.type;
+    const oid = document.createElement("code");
+    oid.textContent = entry.oid;
+    target.append(type, oid);
+    item.append(identity, target);
+    if (entry.type === "blob") {
+      const preview = document.createElement("pre");
+      preview.className = "tree-file-preview";
+      const decodedPreview = blobPreview(decoded.objects.get(entry.oid));
+      preview.dataset.kind = decodedPreview.kind;
+      preview.textContent = decodedPreview.text;
+      item.append(preview);
+    }
+    list.append(item);
+  }
+  elements.repositoryTree.append(list);
+}
+
 function setNotice(message = "", kind = "neutral") {
   elements.notice.hidden = message.length === 0;
   elements.notice.dataset.kind = kind;
@@ -153,6 +219,10 @@ function renderState(repository) {
     elements.refList.replaceChildren();
     elements.objectsEmpty.hidden = false;
     elements.objectList.replaceChildren();
+    elements.treeEmpty.hidden = false;
+    elements.treeEmpty.removeAttribute("data-kind");
+    elements.treeEmpty.textContent = "Publish a commit to decode its files.";
+    elements.repositoryTree.replaceChildren();
     elements.rawState.textContent = "null";
     elements.objectPlaneCopy.textContent = "No repository opened";
     elements.controlPlaneCopy.textContent = "Revision —";
@@ -201,6 +271,7 @@ function renderState(repository) {
       return item;
     }),
   );
+  renderRepositoryTree(repository);
   elements.rawState.textContent = JSON.stringify(repository, null, 2);
   elements.objectPlaneCopy.textContent = `${objects.length} reachable object${objects.length === 1 ? "" : "s"}`;
   elements.controlPlaneCopy.textContent = `Revision ${repository.revision}`;
